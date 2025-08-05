@@ -9,5 +9,6 @@ namespace TodoApi.Data
             : base(options) { }
 
         public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+        public DbSet<User> Users => Set<User>();
     }
 }

@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,5 +30,31 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
+
+var key = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(key))
+{
+    throw new InvalidOperationException("JWT key is missing in configuration.");
+}
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
